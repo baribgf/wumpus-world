@@ -1,0 +1,1 @@
+- Add prompt namespaces for `tui`.
