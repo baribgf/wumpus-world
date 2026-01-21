@@ -2,6 +2,7 @@ mod agent;
 mod agents;
 mod env;
 mod grid;
+mod logic;
 mod room;
 mod tui;
 
@@ -132,7 +133,7 @@ fn play(mode: GameMode) {
             },
             Action::None => {
                 panic!("Agent cannot act!");
-            },
+            }
         }
     }
 }
