@@ -2,6 +2,7 @@ mod agent;
 mod agents;
 mod env;
 mod grid;
+mod kb;
 mod logic;
 mod room;
 mod tui;
