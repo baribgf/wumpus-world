@@ -13,6 +13,7 @@ pub fn read_command() -> String {
 }
 
 pub fn print_prompt() {
+    println!();
     print!("> ");
     flush();
 }
@@ -45,11 +46,11 @@ pub fn main_menu() {
     println!("[h] Help");
     println!();
     println!("[q] Quit");
-    println!();
     print_prompt();
 }
 
 pub fn play_help() {
+    println!();
     println!("[g?] View grid");
     println!("[s?] View score");
     println!("[mv] Move [n,s,e,w]");

@@ -16,7 +16,6 @@ pub enum Direction {
 /// * `Move(Direction)` - Move the agent in the specified direction
 /// * `Shoot(Direction)` - Shoot an arrow in the specified direction
 /// * `Climb` - Climb out of the cave
-/// * `None` - Perform no action
 #[derive(PartialEq)]
 pub enum Action {
     Move(Direction),

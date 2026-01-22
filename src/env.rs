@@ -168,8 +168,8 @@ impl Environment {
 impl Display for Environment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut res = Ok(());
-
-        'outer: for i in 0..self.grid.nrows() {
+        let nrows = self.grid.nrows();
+        'outer: for i in 0..nrows {
             for j in 0..self.grid.ncols() {
                 let room = self.grid.room_at(&Pos::new(i, j));
                 match room.is_visited() {
@@ -201,7 +201,10 @@ impl Display for Environment {
                     break 'outer;
                 }
             }
+
+            if i < nrows - 1 {
                 res = f.write_char('\n');
+            }
         }
         res
     }
