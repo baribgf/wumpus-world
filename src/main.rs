@@ -8,10 +8,9 @@ mod room;
 mod tui;
 
 use crate::{
-    agent::{Action, Agent, Direction, Sense},
+    agent::{Action, Agent, Direction},
     agents::KnowledgeBasedAgent,
-    env::{ActionResult, Environment},
-    tui::{confirm, invalid_input},
+    env::{ActionResult, Environment, Sense},
 };
 
 #[derive(PartialEq)]
@@ -63,7 +62,7 @@ fn play(mode: GameMode) {
             let mut direction: Option<Direction>;
             match tui::read_command().as_str() {
                 "b" => {
-                    if confirm() {
+                    if tui::confirm() {
                         break;
                     }
                 }
@@ -95,7 +94,7 @@ fn play(mode: GameMode) {
                             }
                         }
                         ActionResult::Sense(obs) => match obs {
-                            agent::Sense::Bump => tui::invalid_direction(),
+                            Sense::Bump => tui::invalid_direction(),
                             _ => fatal(),
                         },
                     };
@@ -135,7 +134,7 @@ fn play(mode: GameMode) {
                         _ => fatal(),
                     };
                 }
-                _ => invalid_input(),
+                _ => tui::invalid_input(),
             }
         },
         GameMode::Agent => {

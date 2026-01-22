@@ -1,12 +1,21 @@
 use std::fmt::{Display, Write};
 
 use crate::{
-    agent::{Action, Direction, Observation, Sense},
+    agent::{Action, Direction, Observation},
     grid::{Grid, Pos},
-    room::{Room, RoomKind, RoomSense},
+    room::{Room, RoomKind},
 };
 
 const ARROW_PENALTY: usize = 10;
+
+#[derive(Debug, Eq, Hash, PartialEq, Clone)]
+pub enum Sense {
+    Stench,
+    Breeze,
+    Scream,
+    Bump,
+    Ceil,
+}
 
 #[derive(Debug)]
 pub enum ActionResult {
@@ -55,7 +64,7 @@ impl Environment {
             score: 0,
             init_pos: Pos::new(START_POS_ROW, START_POS_COL),
             agent_pos: Pos::new(0, 0),
-            curr_obs: Observation::new(Pos::new(0, 0), Sense::None),
+            curr_obs: Observation::new(Pos::new(0, 0)),
         };
 
         Self::initialize(&mut env);
@@ -106,7 +115,7 @@ impl Environment {
         self.score = 0;
         self.agent_pos = self.init_pos.clone();
         self.curr_obs.set_position(self.init_pos.clone());
-        self.curr_obs.set_sense(Sense::None);
+        self.curr_obs.mut_senses().clear();
         self.grid.initialize();
         self.lightup_agent_position();
     }
@@ -133,6 +142,13 @@ impl Environment {
                 }
                 self.lightup_agent_position();
                 self.set_score(self.score() + self.current_room().get_kind().score());
+
+                // Update current observation
+                self.curr_obs.set_position(self.agent_position().clone());
+                let current_senses: Vec<Sense> = self.current_room().senses().iter().map(|s| s.to_owned()).collect();
+                self.curr_obs.mut_senses().clear();
+                self.curr_obs.mut_senses().extend(current_senses);
+
                 match self.current_room().get_kind() {
                     RoomKind::Pit => ActionResult::GameOver,
                     RoomKind::Wumpus => ActionResult::GameOver,
@@ -185,11 +201,11 @@ impl Display for Environment {
                                 true => "A",
                                 false => "_",
                             },
-                            match room.has_sense(RoomSense::Breeze) {
+                            match room.has_sense(Sense::Breeze) {
                                 true => "b",
                                 false => "_",
                             },
-                            match room.has_sense(RoomSense::Stench) {
+                            match room.has_sense(Sense::Stench) {
                                 true => "s",
                                 false => "_",
                             },

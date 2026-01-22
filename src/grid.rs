@@ -1,10 +1,9 @@
-use std::{
-    ops::{Add, Index, IndexMut},
-};
+use std::ops::{Add, Index, IndexMut};
 
 use crate::{
     agent::Direction,
-    room::{Room, RoomKind, RoomSense},
+    env::Sense,
+    room::{Room, RoomKind},
 };
 
 #[derive(Clone, PartialEq, Debug)]
@@ -51,7 +50,7 @@ impl Grid {
         }
     }
 
-    fn surround_cell(&mut self, row: usize, col: usize, with: &RoomSense) {
+    fn surround_cell(&mut self, row: usize, col: usize, with: &Sense) {
         if row as isize - 1 >= 0 {
             self.cells[row - 1][col].add_sense(with.clone());
         }
@@ -73,11 +72,11 @@ impl Grid {
                     RoomKind::Void => {}
                     RoomKind::Pit => {
                         // surround with breeze sense
-                        self.surround_cell(i, j, &RoomSense::Breeze);
+                        self.surround_cell(i, j, &Sense::Breeze);
                     }
                     RoomKind::Wumpus => {
                         // surround with stench sense
-                        self.surround_cell(i, j, &RoomSense::Stench);
+                        self.surround_cell(i, j, &Sense::Stench);
                     }
                     RoomKind::Gold => {}
                 }

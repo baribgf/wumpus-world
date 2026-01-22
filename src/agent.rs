@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::{grid::Pos, room::RoomSense};
+use crate::{env::Sense, grid::Pos};
 
 #[derive(Eq, Debug, PartialEq, Hash)]
 pub enum Direction {
@@ -24,23 +24,14 @@ pub enum Action {
 }
 
 #[derive(Debug)]
-pub enum Sense {
-    Room(HashSet<RoomSense>),
-    Scream,
-    Bump,
-    Ceil,
-    None,
-}
-
-#[derive(Debug)]
 pub struct Observation {
     position: Pos,
-    sense: Sense
+    senses: HashSet<Sense>
 }
 
 impl Observation {
-    pub fn new(position: Pos, sense: Sense) -> Self {
-        Self { position, sense }
+    pub fn new(position: Pos) -> Self {
+        Self { position, senses: HashSet::new() }
     }
 
     pub fn position(&self) -> &Pos {
@@ -51,12 +42,12 @@ impl Observation {
         self.position = pos
     }
 
-    pub fn sense(&self) -> &Sense {
-        &self.sense
+    pub fn senses(&self) -> &HashSet<Sense> {
+        &self.senses
     }
 
-    pub fn set_sense(&mut self, sense: Sense) {
-        self.sense = sense
+    pub fn mut_senses(&mut self) -> &mut HashSet<Sense> {
+        &mut self.senses
     }
 }
 

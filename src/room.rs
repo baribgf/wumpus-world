@@ -1,8 +1,9 @@
 use std::{
     collections::HashSet,
     fmt::{Display, Write},
-    hash::Hash,
 };
+
+use crate::env::Sense;
 
 pub enum RoomKind {
     Void,
@@ -38,15 +39,9 @@ impl Display for RoomKind {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
-pub enum RoomSense {
-    Stench,
-    Breeze,
-}
-
 pub struct Room {
     kind: RoomKind,
-    senses: HashSet<RoomSense>,
+    senses: HashSet<Sense>,
     visited: bool,
 }
 
@@ -75,15 +70,19 @@ impl Room {
         self.visited = visited;
     }
 
-    pub fn add_sense(&mut self, sense: RoomSense) {
+    pub fn senses(&self) -> &HashSet<Sense> {
+        &self.senses
+    }
+
+    pub fn add_sense(&mut self, sense: Sense) {
+        if sense != Sense::Breeze && sense != Sense::Stench {
+            panic!("{:?} is not a room sense!", sense);
+        }
+
         self.senses.insert(sense);
     }
 
-    /* pub fn remove_sense(&mut self, sense: RoomSense) {
-        self.senses.remove(&sense);
-    } */
-
-    pub fn has_sense(&self, sense: RoomSense) -> bool {
+    pub fn has_sense(&self, sense: Sense) -> bool {
         self.senses.contains(&sense)
     }
 }
