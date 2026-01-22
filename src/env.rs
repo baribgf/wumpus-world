@@ -159,7 +159,6 @@ impl Environment {
                 true => ActionResult::GameOver,
                 false => ActionResult::CannotClimb,
             },
-            Action::None => ActionResult::Ok,
         }
     }
 }

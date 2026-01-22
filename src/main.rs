@@ -161,9 +161,6 @@ fn play(mode: GameMode) {
                         },
                         _ => {}
                     },
-                    Action::None => {
-                        panic!("Agent cannot act!");
-                    }
                 }
             }
         }
