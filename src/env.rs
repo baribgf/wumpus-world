@@ -8,6 +8,7 @@ use crate::{
 
 const ARROW_PENALTY: usize = 10;
 
+#[derive(Debug)]
 pub enum ActionResult {
     Ok,
     Bump,
@@ -134,8 +135,7 @@ impl Environment {
                     RoomKind::Pit => ActionResult::GameOver,
                     RoomKind::Wumpus => ActionResult::GameOver,
                     _ => ActionResult::Ok,
-                };
-                ActionResult::Ok
+                }
             }
             Action::Shoot(direction) => {
                 if !self.is_direction_valid(&direction) {
