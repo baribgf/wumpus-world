@@ -28,10 +28,10 @@ impl KnowledgeBasedAgent {
 }
 
 impl Agent for KnowledgeBasedAgent {
-    fn act(&mut self, obs: Observation) -> Action {
+    fn act(&mut self, obs: &Observation) -> Action {
         // First, transform observation into a statement,
         // and `tell` it to the `KB`
-        self.kb.tell(self.make_percept_stmt(&obs));
+        self.kb.tell(self.make_percept_stmt(obs));
 
         // Then, `ask` the `KB` for an action
         let action = self.ask_for_action();

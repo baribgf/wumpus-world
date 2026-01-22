@@ -1,7 +1,7 @@
 use std::fmt::{Display, Write};
 
 use crate::{
-    agent::{Action, Direction, Observation},
+    agent::{Action, Direction, Observation, Sense},
     grid::{Grid, Pos},
     room::{Room, RoomKind, RoomSense},
 };
@@ -11,10 +11,8 @@ const ARROW_PENALTY: usize = 10;
 #[derive(Debug)]
 pub enum ActionResult {
     Ok,
-    Bump,
     GameOver,
-    Scream,
-    CannotClimb,
+    Sense(Sense),
 }
 
 pub struct Environment {
@@ -22,6 +20,7 @@ pub struct Environment {
     score: isize,
     init_pos: Pos,
     agent_pos: Pos,
+    curr_obs: Observation,
 }
 
 impl Environment {
@@ -56,6 +55,7 @@ impl Environment {
             score: 0,
             init_pos: Pos::new(START_POS_ROW, START_POS_COL),
             agent_pos: Pos::new(0, 0),
+            curr_obs: Observation::new(Pos::new(0, 0), Sense::None),
         };
 
         Self::initialize(&mut env);
@@ -92,8 +92,8 @@ impl Environment {
         &self.grid.room_at(&self.agent_pos)
     }
 
-    pub fn observation(&self) -> Observation {
-        self.current_room()
+    pub fn observation(&self) -> &Observation {
+        &self.curr_obs
     }
 
     pub fn lightup_agent_position(&mut self) {
@@ -105,6 +105,8 @@ impl Environment {
     pub fn initialize(&mut self) {
         self.score = 0;
         self.agent_pos = self.init_pos.clone();
+        self.curr_obs.set_position(self.init_pos.clone());
+        self.curr_obs.set_sense(Sense::None);
         self.grid.initialize();
         self.lightup_agent_position();
     }
@@ -113,7 +115,7 @@ impl Environment {
         match action {
             Action::Move(direction) => {
                 if !self.is_direction_valid(&direction) {
-                    return ActionResult::Bump;
+                    return ActionResult::Sense(Sense::Bump);
                 }
                 match direction {
                     Direction::North => {
@@ -139,7 +141,7 @@ impl Environment {
             }
             Action::Shoot(direction) => {
                 if !self.is_direction_valid(&direction) {
-                    return ActionResult::Bump;
+                    return ActionResult::Sense(Sense::Bump);
                 }
 
                 let target_position = self.agent_position() + &direction;
@@ -150,14 +152,14 @@ impl Environment {
                             .set_kind(RoomKind::Void);
                         self.grid.mut_room_at(&target_position).set_visited(true);
                         self.set_score(self.score() - ARROW_PENALTY as isize);
-                        ActionResult::Scream
+                        return ActionResult::Sense(Sense::Scream);
                     }
                     _ => ActionResult::Ok,
                 }
             }
             Action::Climb => match self.agent_pos == self.init_pos {
                 true => ActionResult::GameOver,
-                false => ActionResult::CannotClimb,
+                false => return ActionResult::Sense(Sense::Ceil),
             },
         }
     }
@@ -199,7 +201,7 @@ impl Display for Environment {
                     break 'outer;
                 }
             }
-            res = f.write_char('\n');
+                res = f.write_char('\n');
         }
         res
     }

@@ -1,4 +1,6 @@
-use crate::room::Room;
+use std::collections::HashSet;
+
+use crate::{grid::Pos, room::RoomSense};
 
 #[derive(Eq, Debug, PartialEq, Hash)]
 pub enum Direction {
@@ -22,7 +24,42 @@ pub enum Action {
     Climb,
 }
 
-pub type Observation<'a> = &'a Room;
+#[derive(Debug)]
+pub enum Sense {
+    Room(HashSet<RoomSense>),
+    Scream,
+    Bump,
+    Ceil,
+    None,
+}
+
+#[derive(Debug)]
+pub struct Observation {
+    position: Pos,
+    sense: Sense
+}
+
+impl Observation {
+    pub fn new(position: Pos, sense: Sense) -> Self {
+        Self { position, sense }
+    }
+
+    pub fn position(&self) -> &Pos {
+        &self.position
+    }
+
+    pub fn set_position(&mut self, pos: Pos) {
+        self.position = pos
+    }
+
+    pub fn sense(&self) -> &Sense {
+        &self.sense
+    }
+
+    pub fn set_sense(&mut self, sense: Sense) {
+        self.sense = sense
+    }
+}
 
 /// Trait for implementing an agent in the Wumpus World.
 ///
@@ -33,5 +70,5 @@ pub type Observation<'a> = &'a Room;
 /// * `act` - Determines the next action the agent should take given
 /// the current observation
 pub trait Agent {
-    fn act(&mut self, obs: Observation) -> Action;
+    fn act(&mut self, obs: &Observation) -> Action;
 }

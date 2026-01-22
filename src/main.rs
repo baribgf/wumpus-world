@@ -8,7 +8,7 @@ mod room;
 mod tui;
 
 use crate::{
-    agent::{Action, Agent, Direction},
+    agent::{Action, Agent, Direction, Sense},
     agents::KnowledgeBasedAgent,
     env::{ActionResult, Environment},
     tui::{confirm, invalid_input},
@@ -84,7 +84,6 @@ fn play(mode: GameMode) {
                 {
                     match env.step(&Action::Move(direction.unwrap())) {
                         ActionResult::Ok => tui::display_env(&env),
-                        ActionResult::Bump => tui::invalid_direction(),
                         ActionResult::GameOver => {
                             tui::display_env(&env);
                             match tui::game_over(env.score()) {
@@ -95,7 +94,10 @@ fn play(mode: GameMode) {
                                 }
                             }
                         }
-                        _ => {}
+                        ActionResult::Sense(obs) => match obs {
+                            agent::Sense::Bump => tui::invalid_direction(),
+                            _ => fatal(),
+                        },
                     };
                 }
                 shoot
@@ -105,18 +107,24 @@ fn play(mode: GameMode) {
                     } =>
                 {
                     match env.step(&Action::Shoot(direction.unwrap())) {
-                        ActionResult::Scream => {
-                            tui::display_env(&env);
-                            println!("You killed the Wumpus!");
-                        }
-                        ActionResult::Bump => tui::invalid_direction(),
+                        ActionResult::Sense(obs) => match obs {
+                            Sense::Scream => {
+                                tui::display_env(&env);
+                                println!("You killed the Wumpus!");
+                            }
+                            Sense::Bump => tui::invalid_direction(),
+                            _ => fatal(),
+                        },
                         ActionResult::Ok => {}
-                        _ => {}
+                        _ => fatal(),
                     };
                 }
                 "cl" => {
                     match env.step(&Action::Climb) {
-                        ActionResult::CannotClimb => println!("Cannot climb from here!"),
+                        ActionResult::Sense(obs) => match obs {
+                            Sense::Ceil => println!("Cannot climb from here!"),
+                            _ => fatal(),
+                        },
                         ActionResult::GameOver => match tui::game_over(env.score()) {
                             true => break,
                             false => {
@@ -124,7 +132,7 @@ fn play(mode: GameMode) {
                                 tui::play_help();
                             }
                         },
-                        _ => {}
+                        _ => fatal(),
                     };
                 }
                 _ => invalid_input(),
@@ -132,7 +140,6 @@ fn play(mode: GameMode) {
         },
         GameMode::Agent => {
             let mut agent = KnowledgeBasedAgent::new();
-
             loop {
                 let action = agent.act(env.observation());
                 match &action {
@@ -148,10 +155,13 @@ fn play(mode: GameMode) {
                         _ => {}
                     },
                     Action::Shoot(_) => match env.step(&action) {
-                        ActionResult::Scream => {
-                            tui::display_env(&env);
-                            println!("The Wumpus is killed!");
-                        }
+                        ActionResult::Sense(obs) => match obs {
+                            Sense::Scream => {
+                                tui::display_env(&env);
+                                println!("The Wumpus is killed!");
+                            }
+                            _ => {}
+                        },
                         _ => {}
                     },
                     Action::Climb => match env.step(&action) {
@@ -165,4 +175,8 @@ fn play(mode: GameMode) {
             }
         }
     }
+}
+
+fn fatal() {
+    panic!("Fatal error!")
 }

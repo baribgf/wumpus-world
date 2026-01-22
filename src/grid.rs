@@ -7,7 +7,7 @@ use crate::{
     room::{Room, RoomKind, RoomSense},
 };
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct Pos {
     pub row: usize,
     pub col: usize,
