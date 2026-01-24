@@ -24,7 +24,37 @@ impl KnowledgeBasedAgent {
     }
 
     pub fn make_percept_stmt(&self, obs: &Observation) -> Statement {
-        todo!()
+        let pos = obs.position();
+
+        if obs.senses().len() == 0 {
+            /* current cell contains no sense */
+            return Statement::Atomic(Atomic::new(&format!("V_{},{}", pos.row, pos.col)));
+        }
+
+        let mut conjuncts: Vec<Statement> = Vec::new();
+        for sense in obs.senses() {
+            conjuncts.push(match sense {
+                Sense::Stench => {
+                    Statement::Atomic(Atomic::new(&format!("St_{},{}", pos.row, pos.col)))
+                }
+                Sense::Breeze => {
+                    Statement::Atomic(Atomic::new(&format!("Br_{},{}", pos.row, pos.col)))
+                }
+                Sense::Scream(dir) => {
+                    let wumpus_pos = pos + dir;
+                    Statement::Atomic(Atomic::new(&format!(
+                        "Sc_{},{}",
+                        wumpus_pos.row, wumpus_pos.col
+                    )))
+                }
+                Sense::Glitter => {
+                    Statement::Atomic(Atomic::new(&format!("Gl_{},{}", pos.row, pos.col)))
+                }
+                _ => panic!(),
+            });
+        }
+
+        make_conjuncts(&conjuncts).unwrap()
     }
 
     pub fn make_action_stmt(&self, action: &Action) -> Statement {
@@ -76,3 +106,33 @@ impl Agent for KnowledgeBasedAgent {
     }
 }
 ////////////////////////////////////////////////////////////
+
+fn make_disjuncts(stmts: &[Statement]) -> Option<Statement> {
+    match stmts.first() {
+        Some(stmt) => match make_disjuncts(&stmts[1..]) {
+            Some(rhs) => Some(Statement::OrClause(stmt.clone().boxed(), rhs.boxed())),
+            None => Some(stmt.to_owned()),
+        },
+        None => None,
+    }
+}
+
+fn make_conjuncts(stmts: &[Statement]) -> Option<Statement> {
+    match stmts.first() {
+        Some(stmt) => match make_conjuncts(&stmts[1..]) {
+            Some(rhs) => Some(Statement::AndClause(stmt.clone().boxed(), rhs.boxed())),
+            None => Some(stmt.to_owned()),
+        },
+        None => None,
+    }
+}
+
+fn make_mutuals(stmts: &[Statement]) -> Option<Statement> {
+    match stmts.first() {
+        Some(stmt) => match make_mutuals(&stmts[1..]) {
+            Some(rhs) => Some(Statement::XorClause(stmt.clone().boxed(), rhs.boxed())),
+            None => Some(stmt.to_owned()),
+        },
+        None => None,
+    }
+}
