@@ -94,7 +94,7 @@ fn play(mode: GameMode) {
                             }
                         }
                         ActionResult::Sense(obs) => match obs {
-                            Sense::Bump => tui::invalid_direction(),
+                                Sense::Bump(_) => tui::invalid_direction(),
                             _ => fatal(),
                         },
                     };
@@ -107,11 +107,11 @@ fn play(mode: GameMode) {
                 {
                     match env.step(&Action::Shoot(direction.unwrap())) {
                         ActionResult::Sense(obs) => match obs {
-                            Sense::Scream => {
+                                Sense::Scream(_) => {
                                 tui::display_env(&env);
                                 println!("You killed the Wumpus!");
                             }
-                            Sense::Bump => tui::invalid_direction(),
+                                Sense::Bump(_) => tui::invalid_direction(),
                             _ => fatal(),
                         },
                         ActionResult::Ok => {}
@@ -155,7 +155,7 @@ fn play(mode: GameMode) {
                     },
                     Action::Shoot(_) => match env.step(&action) {
                         ActionResult::Sense(obs) => match obs {
-                            Sense::Scream => {
+                            Sense::Scream(_) => {
                                 tui::display_env(&env);
                                 println!("The Wumpus is killed!");
                             }

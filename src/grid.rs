@@ -6,7 +6,7 @@ use crate::{
     room::{Room, RoomKind},
 };
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, Eq, Hash)]
 pub struct Pos {
     pub row: usize,
     pub col: usize,
@@ -78,7 +78,9 @@ impl Grid {
                         // surround with stench sense
                         self.surround_cell(i, j, &Sense::Stench);
                     }
-                    RoomKind::Gold => {}
+                    RoomKind::Gold => {
+                        self.cells[i][j].add_sense(Sense::Glitter);
+                    }
                 }
             }
         }

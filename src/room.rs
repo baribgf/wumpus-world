@@ -75,7 +75,7 @@ impl Room {
     }
 
     pub fn add_sense(&mut self, sense: Sense) {
-        if sense != Sense::Breeze && sense != Sense::Stench {
+        if sense != Sense::Breeze && sense != Sense::Stench && sense != Sense::Glitter {
             panic!("{:?} is not a room sense!", sense);
         }
 

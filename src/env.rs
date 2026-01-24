@@ -12,8 +12,9 @@ const ARROW_PENALTY: usize = 10;
 pub enum Sense {
     Stench,
     Breeze,
-    Scream,
-    Bump,
+    Scream(Direction),
+    Glitter,
+    Bump(Direction),
     Ceil,
 }
 
@@ -124,7 +125,7 @@ impl Environment {
         match action {
             Action::Move(direction) => {
                 if !self.is_direction_valid(&direction) {
-                    return ActionResult::Sense(Sense::Bump);
+                    return ActionResult::Sense(Sense::Bump(direction.clone()));
                 }
                 match direction {
                     Direction::North => {
@@ -157,7 +158,7 @@ impl Environment {
             }
             Action::Shoot(direction) => {
                 if !self.is_direction_valid(&direction) {
-                    return ActionResult::Sense(Sense::Bump);
+                    return ActionResult::Sense(Sense::Bump(direction.clone()));
                 }
 
                 let target_position = self.agent_position() + &direction;
@@ -175,7 +176,11 @@ impl Environment {
             }
             Action::Climb => match self.agent_pos == self.init_pos {
                 true => ActionResult::GameOver,
-                false => return ActionResult::Sense(Sense::Ceil),
+                false => {
+                    let sense = Sense::Ceil;
+                    self.curr_obs.mut_senses().insert(sense.clone());
+                    ActionResult::Sense(sense)
+                }
             },
         }
     }
