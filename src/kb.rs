@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, fmt::Display};
 
 use crate::logic::Statement;
 
@@ -19,6 +19,10 @@ impl KnowledgeBase {
         }
     }
 
+    pub fn clear(&mut self) {
+        self.facts.clear();
+    }
+
     /// Stores a fact into the knowledge base.
     pub fn tell(&mut self, stmt: Statement) {
         self.facts.insert(stmt);
@@ -29,5 +33,14 @@ impl KnowledgeBase {
         /* Here, begins the real adventure of
         intelligent reasoning! TO BE CONTINUED.. */
         false
+    }
+}
+
+impl Display for KnowledgeBase {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for fact in &self.facts {
+            f.write_fmt(format_args!("{}\n", fact)).unwrap()
+        }
+        Ok(())
     }
 }
