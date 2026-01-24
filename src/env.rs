@@ -1,4 +1,7 @@
-use std::fmt::{Display, Write};
+use std::{
+    collections::HashSet,
+    fmt::{Display, Write},
+};
 
 use crate::{
     agent::{Action, Direction, Observation},
@@ -71,6 +74,10 @@ impl Environment {
         Self::initialize(&mut env);
 
         env
+    }
+
+    pub fn grid(&self) -> &Grid {
+        &self.grid
     }
 
     pub fn agent_position(&self) -> &Pos {
@@ -221,18 +228,29 @@ impl Environment {
 
 impl Display for Environment {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let mut res = Ok(());
         let nrows = self.grid.nrows();
-        'outer: for i in 0..nrows {
-            for j in 0..self.grid.ncols() {
+        let ncols = self.grid.ncols();
+
+        let header = (0..ncols)
+            .map(|i| i.to_string())
+            .collect::<Vec<_>>()
+            .join("     ");
+
+        f.write_str("    ")?;
+        f.write_str(&header)?;
+        f.write_char('\n')?;
+
+        for i in 0..nrows {
+            f.write_str(&format!("{}  ", i))?;
+            for j in 0..ncols {
                 let room = self.grid.room_at(&Pos::new(i, j));
                 match room.is_visited() {
                     false => {
-                        res = f.write_str("....  ");
+                        f.write_str("....  ")?;
                     }
                     true => {
                         let agent_pos = self.agent_position();
-                        res = f.write_fmt(format_args!(
+                        f.write_fmt(format_args!(
                             "{}{}{}{}  ",
                             room.get_kind(),
                             match agent_pos.row == i && agent_pos.col == j {
@@ -247,19 +265,15 @@ impl Display for Environment {
                                 true => "s",
                                 false => "_",
                             },
-                        ));
+                        ))?;
                     }
-                }
-
-                if res.is_err() {
-                    break 'outer;
                 }
             }
 
             if i < nrows - 1 {
-                res = f.write_char('\n');
+                f.write_char('\n')?;
             }
         }
-        res
+        Ok(())
     }
 }
