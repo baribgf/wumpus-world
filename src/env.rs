@@ -90,6 +90,26 @@ impl Environment {
         }
     }
 
+    fn available_directions(&self) -> HashSet<Direction> {
+        let mut all_directions = HashSet::new();
+        all_directions.insert(Direction::North);
+        all_directions.insert(Direction::South);
+        all_directions.insert(Direction::East);
+        all_directions.insert(Direction::West);
+
+        all_directions.retain(|d| self.is_direction_valid(d));
+
+        all_directions
+    }
+
+    fn current_room_senses(&self) -> HashSet<Sense> {
+        self.current_room()
+            .senses()
+            .iter()
+            .map(|s| s.to_owned())
+            .collect()
+    }
+
     pub fn score(&self) -> isize {
         self.score
     }
@@ -117,6 +137,9 @@ impl Environment {
         self.agent_pos = self.init_pos.clone();
         self.curr_obs.set_position(self.init_pos.clone());
         self.curr_obs.mut_senses().clear();
+        self.curr_obs.mut_directions().clear();
+        let directions = self.available_directions();
+        self.curr_obs.mut_directions().extend(directions);
         self.grid.initialize();
         self.lightup_agent_position();
     }
@@ -144,11 +167,16 @@ impl Environment {
                 self.lightup_agent_position();
                 self.set_score(self.score() + self.current_room().get_kind().score());
 
-                // Update current observation
+                // update current observation
                 self.curr_obs.set_position(self.agent_position().clone());
-                let current_senses: Vec<Sense> = self.current_room().senses().iter().map(|s| s.to_owned()).collect();
+
+                let current_senses = self.current_room_senses();
                 self.curr_obs.mut_senses().clear();
                 self.curr_obs.mut_senses().extend(current_senses);
+
+                let available_dirs = self.available_directions();
+                self.curr_obs.mut_directions().clear();
+                self.curr_obs.mut_directions().extend(available_dirs);
 
                 match self.current_room().get_kind() {
                     RoomKind::Pit => ActionResult::GameOver,
@@ -169,7 +197,12 @@ impl Environment {
                             .set_kind(RoomKind::Void);
                         self.grid.mut_room_at(&target_position).set_visited(true);
                         self.set_score(self.score() - ARROW_PENALTY as isize);
-                        return ActionResult::Sense(Sense::Scream);
+
+                        // update current observation
+                        let sense = Sense::Scream(direction.clone());
+                        self.curr_obs.mut_senses().insert(sense.clone());
+
+                        ActionResult::Sense(sense)
                     }
                     _ => ActionResult::Ok,
                 }
