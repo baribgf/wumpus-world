@@ -138,7 +138,12 @@ fn play(mode: GameMode) {
             }
         },
         GameMode::Agent => {
-            let mut agent = KnowledgeBasedAgent::new();
+            let mut agent = KnowledgeBasedAgent::new(
+                env.agent_position(),
+                env.grid().nrows(),
+                env.grid().ncols(),
+            );
+            
             loop {
                 let action = agent.act(env.observation());
                 match &action {
@@ -148,7 +153,7 @@ fn play(mode: GameMode) {
                             tui::display_env(&env);
                             match tui::game_over(env.score()) {
                                 true => break,
-                                false => env.initialize(),
+                                    agent.reset();
                             }
                         }
                         _ => {}
@@ -166,7 +171,7 @@ fn play(mode: GameMode) {
                     Action::Climb => match env.step(&action) {
                         ActionResult::GameOver => match tui::game_over(env.score()) {
                             true => break,
-                            false => env.initialize(),
+                                agent.reset();
                         },
                         _ => {}
                     },
