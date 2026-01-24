@@ -53,91 +53,96 @@ fn play(mode: GameMode) {
 
     let mut env = Environment::new();
 
-    tui::play_help();
-
     match mode {
-        GameMode::Player => loop {
-            tui::print_prompt();
+        GameMode::Player => {
+            tui::play_help();
+            loop {
+                tui::print_prompt();
 
-            let mut direction: Option<Direction>;
-            match tui::read_command().as_str() {
-                "b" => {
-                    if tui::confirm() {
-                        break;
+                let mut direction: Option<Direction>;
+                match tui::read_command().as_str() {
+                    "b" => {
+                        if tui::confirm() {
+                            break;
+                        }
                     }
-                }
-                "?" => {
-                    tui::play_help();
-                }
-                "" => {}
-                "g?" => {
-                    tui::display_env(&env);
-                }
-                "s?" => {
-                    tui::display_score(env.score());
-                }
-                mov if mov.starts_with("mv ") && {
-                    direction = tui::parse_direction(mov);
-                    direction.is_some()
-                } =>
-                {
-                    match env.step(&Action::Move(direction.unwrap())) {
-                        ActionResult::Ok => tui::display_env(&env),
-                        ActionResult::GameOver => {
-                            tui::display_env(&env);
-                            match tui::game_over(env.score()) {
+                    "?" => {
+                        tui::play_help();
+                    }
+                    "" => {}
+                    "g?" => {
+                        tui::display_env(&env);
+                    }
+                    "s?" => {
+                        tui::display_score(env.score());
+                    }
+                    mov if mov.starts_with("mv ") && {
+                        direction = tui::parse_direction(mov);
+                        direction.is_some()
+                    } =>
+                    {
+                        match env.step(&Action::Move(direction.unwrap())) {
+                            ActionResult::Ok => tui::display_env(&env),
+                            ActionResult::GameOver => {
+                                tui::display_env(&env);
+                                match tui::game_over(env.score()) {
+                                    true => break,
+                                    false => {
+                                        env.initialize();
+                                        tui::play_help();
+                                    }
+                                }
+                            }
+                            ActionResult::Sense(obs) => match obs {
+                                Sense::Bump(_) => tui::invalid_direction(),
+                                _ => fatal(),
+                            },
+                        };
+                    }
+                    shoot
+                        if shoot.starts_with("sh ") && {
+                            direction = tui::parse_direction(shoot);
+                            direction.is_some()
+                        } =>
+                    {
+                        match env.step(&Action::Shoot(direction.unwrap())) {
+                            ActionResult::Sense(obs) => match obs {
+                                Sense::Scream(_) => {
+                                    tui::display_env(&env);
+                                    println!("You killed the Wumpus!");
+                                }
+                                Sense::Bump(_) => tui::invalid_direction(),
+                                _ => fatal(),
+                            },
+                            ActionResult::Ok => {}
+                            _ => fatal(),
+                        };
+                    }
+                    "cl" => {
+                        match env.step(&Action::Climb) {
+                            ActionResult::Sense(obs) => match obs {
+                                Sense::Ceil => println!("Cannot climb from here!"),
+                                _ => fatal(),
+                            },
+                            ActionResult::GameOver => match tui::game_over(env.score()) {
                                 true => break,
                                 false => {
                                     env.initialize();
                                     tui::play_help();
                                 }
-                            }
-                        }
-                        ActionResult::Sense(obs) => match obs {
-                                Sense::Bump(_) => tui::invalid_direction(),
+                            },
                             _ => fatal(),
-                        },
-                    };
+                        };
+                    }
+                    _ => tui::invalid_input(),
                 }
-                shoot
-                    if shoot.starts_with("sh ") && {
-                        direction = tui::parse_direction(shoot);
-                        direction.is_some()
-                    } =>
-                {
-                    match env.step(&Action::Shoot(direction.unwrap())) {
-                        ActionResult::Sense(obs) => match obs {
-                                Sense::Scream(_) => {
-                                tui::display_env(&env);
-                                println!("You killed the Wumpus!");
-                            }
-                                Sense::Bump(_) => tui::invalid_direction(),
-                            _ => fatal(),
-                        },
-                        ActionResult::Ok => {}
-                        _ => fatal(),
-                    };
-                }
-                "cl" => {
-                    match env.step(&Action::Climb) {
-                        ActionResult::Sense(obs) => match obs {
-                            Sense::Ceil => println!("Cannot climb from here!"),
-                            _ => fatal(),
-                        },
-                        ActionResult::GameOver => match tui::game_over(env.score()) {
-                            true => break,
-                            false => {
-                                env.initialize();
-                                tui::play_help();
-                            }
-                        },
-                        _ => fatal(),
-                    };
-                }
-                _ => tui::invalid_input(),
             }
-        },
+        }
         GameMode::Agent => {
+            println!();
+            tui::display_env(&env);
+            println!();
+
             let mut agent = KnowledgeBasedAgent::new(
                 env.agent_position(),
                 env.grid().nrows(),
@@ -148,12 +153,21 @@ fn play(mode: GameMode) {
                 let action = agent.act(env.observation());
                 match &action {
                     Action::Move(_) => match env.step(&action) {
-                        ActionResult::Ok => tui::display_env(&env),
+                        ActionResult::Ok => {
+                            tui::display_env(&env);
+                            println!();
+                        }
                         ActionResult::GameOver => {
                             tui::display_env(&env);
                             match tui::game_over(env.score()) {
                                 true => break,
+                                false => {
+                                    env.initialize();
                                     agent.reset();
+                                    println!();
+                                    tui::display_env(&env);
+                                    println!();
+                                }
                             }
                         }
                         _ => {}
@@ -171,7 +185,13 @@ fn play(mode: GameMode) {
                     Action::Climb => match env.step(&action) {
                         ActionResult::GameOver => match tui::game_over(env.score()) {
                             true => break,
+                            false => {
+                                env.initialize();
                                 agent.reset();
+                                println!();
+                                tui::display_env(&env);
+                                println!();
+                            }
                         },
                         _ => {}
                     },
