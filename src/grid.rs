@@ -1,4 +1,4 @@
-use std::ops::{Add, Index, IndexMut};
+use std::ops::{Add, AddAssign, Index, IndexMut};
 
 use crate::{
     agent::Direction,
@@ -30,6 +30,14 @@ impl Add<&Direction> for &Pos {
             Direction::West => result.col -= 1,
         };
         result
+    }
+}
+
+impl AddAssign<&Direction> for Pos {
+    fn add_assign(&mut self, rhs: &Direction) {
+        let p = &*self + rhs;
+        self.col = p.col;
+        self.row = p.row;
     }
 }
 
