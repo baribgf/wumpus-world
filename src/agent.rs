@@ -10,6 +10,17 @@ pub enum Direction {
     West,
 }
 
+impl Direction {
+    pub fn reverse(&self) -> Self {
+        match self {
+            Self::North => Self::South,
+            Self::South => Self::North,
+            Self::East => Self::West,
+            Self::West => Self::East,
+        }
+    }
+}
+
 /// Represents the possible actions an agent can take in the Wumpus World.
 ///
 /// ## Variants
