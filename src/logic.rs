@@ -1,43 +1,24 @@
 use std::fmt::Display;
 use std::hash::Hash;
 
-// Logic Primitives /////////////////////////////////////////
 #[derive(Eq, Hash, PartialEq, Clone)]
 pub struct Atomic {
     name: String,
+    value: bool,
 }
 
 impl Atomic {
     pub fn new(name: &str) -> Self {
         Atomic {
-            name: name.to_string()
-        }
+            name: name.to_string(),
+            value: true,
     }
 }
 
-#[derive(Eq, Hash, PartialEq)]
-pub struct BinaryOp {
-    left: Statement,
-    right: Statement,
-}
-
-impl BinaryOp {
-    pub fn new(left: Statement, right: Statement) -> Self {
-        BinaryOp { left, right }
+    pub fn assign(&mut self, value: bool) {
+        self.value = value;
     }
 }
-
-#[derive(Eq, Hash, PartialEq)]
-pub struct UnaryOp {
-    stmt: Statement,
-}
-
-impl UnaryOp {
-    pub fn new(stmt: Statement) -> Self {
-        UnaryOp { stmt }
-    }
-}
-///////////////////////////////////////////////////////////
 
 type Left = Box<Statement>;
 type Right = Box<Statement>;
@@ -55,7 +36,7 @@ pub enum Statement {
 impl Statement {
     pub fn eval(&self) -> bool {
         match self {
-            Self::Atomic(_) => true,
+            Self::Atomic(atomic) => atomic.value,
             Self::AndClause(left, right) => left.eval() & right.eval(),
             Self::OrClause(left, right) => left.eval() | right.eval(),
             Self::XorClause(left, right) => left.eval() ^ right.eval(),
