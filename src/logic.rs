@@ -12,8 +12,8 @@ impl Atomic {
         Atomic {
             name: name.to_string(),
             value: true,
+        }
     }
-}
 
     pub fn assign(&mut self, value: bool) {
         self.value = value;
@@ -31,6 +31,7 @@ pub enum Statement {
     XorClause(Left, Right),
     NotClause(Box<Statement>),
     ImplyClause(Left, Right),
+    EquivalClause(Left, Right),
 }
 
 impl Statement {
@@ -42,6 +43,7 @@ impl Statement {
             Self::XorClause(left, right) => left.eval() ^ right.eval(),
             Self::NotClause(stmt) => !stmt.eval(),
             Self::ImplyClause(left, right) => !left.eval() | right.eval(),
+            Self::EquivalClause(left, right) => !(left.eval() ^ right.eval()),
         }
     }
 
@@ -69,7 +71,7 @@ impl Display for Statement {
                     right_repr.pop();
                 }
                 f.write_fmt(format_args!("({} | {})", left, right_repr))
-            },
+            }
             Statement::XorClause(left, right) => {
                 let mut right_repr = format!("{}", right);
                 if let Statement::XorClause(_, _) = &**right {
@@ -80,7 +82,10 @@ impl Display for Statement {
             }
             Statement::NotClause(stmt) => f.write_fmt(format_args!("~{}", stmt)),
             Statement::ImplyClause(left, right) => {
-                f.write_fmt(format_args!("({} -> {})", left, right))
+                f.write_fmt(format_args!("({} ⟹ {})", left, right))
+            }
+            Statement::EquivalClause(left, right) => {
+                f.write_fmt(format_args!("({} ⟺ {})", left, right))
             }
         }
     }
