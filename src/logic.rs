@@ -1,61 +1,33 @@
 use std::fmt::Display;
 use std::hash::Hash;
 
-#[derive(Eq, Hash, PartialEq, Clone)]
-pub struct Atomic {
-    name: String,
-    value: bool,
-}
-
-impl Atomic {
-    pub fn new(name: &str) -> Self {
-        Atomic {
-            name: name.to_string(),
-            value: true,
-        }
-    }
-
-    pub fn assign(&mut self, value: bool) {
-        self.value = value;
-    }
-}
-
 type Left = Box<Statement>;
 type Right = Box<Statement>;
 
-#[derive(Eq, Hash, PartialEq, Clone)]
+#[derive(Eq, Hash, PartialEq, Clone, Debug)]
 pub enum Statement {
-    Atomic(Atomic),
+    Atomic(String),
     AndClause(Left, Right),
     OrClause(Left, Right),
-    XorClause(Left, Right),
     NotClause(Box<Statement>),
     ImplyClause(Left, Right),
     EquivalClause(Left, Right),
 }
 
 impl Statement {
-    pub fn eval(&self) -> bool {
-        match self {
-            Self::Atomic(atomic) => atomic.value,
-            Self::AndClause(left, right) => left.eval() & right.eval(),
-            Self::OrClause(left, right) => left.eval() | right.eval(),
-            Self::XorClause(left, right) => left.eval() ^ right.eval(),
-            Self::NotClause(stmt) => !stmt.eval(),
-            Self::ImplyClause(left, right) => !left.eval() | right.eval(),
-            Self::EquivalClause(left, right) => !(left.eval() ^ right.eval()),
-        }
-    }
-
     pub fn boxed(self) -> Box<Self> {
         Box::new(self)
+    }
+
+    pub fn negate(self) -> Self {
+        Self::NotClause(self.boxed())
     }
 }
 
 impl Display for Statement {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Statement::Atomic(atomic) => f.write_str(&atomic.name),
+            Statement::Atomic(symbol) => f.write_str(&symbol),
             Statement::AndClause(left, right) => {
                 let mut right_repr = format!("{}", right);
                 if let Statement::AndClause(_, _) = &**right {
@@ -71,14 +43,6 @@ impl Display for Statement {
                     right_repr.pop();
                 }
                 f.write_fmt(format_args!("({} | {})", left, right_repr))
-            }
-            Statement::XorClause(left, right) => {
-                let mut right_repr = format!("{}", right);
-                if let Statement::XorClause(_, _) = &**right {
-                    right_repr.remove(0);
-                    right_repr.pop();
-                }
-                f.write_fmt(format_args!("({} ⊕  {})", left, right_repr))
             }
             Statement::NotClause(stmt) => f.write_fmt(format_args!("~{}", stmt)),
             Statement::ImplyClause(left, right) => {
