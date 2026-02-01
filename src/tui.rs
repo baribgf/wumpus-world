@@ -88,8 +88,41 @@ pub fn confirm() -> bool {
 }
 
 pub fn general_help() {
-    println!("\n= Help");
-    println!("=");
+    println!("\n=?");
+    println!("The Wumpus World is a cave exploration game where you navigate");
+    println!("a grid to find gold while avoiding the Wumpus and pits.");
+    println!();
+    println!("Rules:");
+    println!("  - There's only one Wumpus in the cave.");
+    println!("  - Start position is always safe.");
+    println!("  - No position can contain both Wumpus and a pit.");
+    println!("  - A position contains a pit iff all neighboring");
+    println!("    positions are breezy.");
+    println!("  - A position contains the Wumpus iff all neighboring");
+    println!("    positions are stenchy.");
+    println!("  - You have only one arrow in your pocket.");
+    println!();
+    println!("Penalties & Rewards:");
+    println!("  - Move penalty: 1");
+    println!("  - Pit penalty: 1000");
+    println!("  - Wumpus penalty: 1000");
+    println!("  - Arrow penalty: 10");
+    println!("  - Gold reward: 1000");
+    println!();
+    println!("Commands:");
+    println!("  [p] Play - Start a new game");
+    println!("  [a] Run Agent - Watch an AI solve the game");
+    println!("  [q] Quit - Exit the game");
+    println!();
+    println!("During gameplay:");
+    println!("  [g] View grid - Display the current cave layout");
+    println!("  [s] View score - Check your current score");
+    println!("  [mv n|s|e|w] - Move in a direction");
+    println!("  [sh n|s|e|w] - Shoot an arrow in a direction");
+    println!("  [cl] Climb out - Exit the cave");
+    println!();
+    println!("Wumpus (an ugly monster), Pit (a deadly fall)");
+    println!("?=");
 }
 
 pub fn display_env(env: &Environment) {
