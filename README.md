@@ -17,7 +17,7 @@ Wumpus World is a grid-based exploration game where an agent navigates a cave sy
 ## Getting Started
 
 ### Prerequisites
-- Rust 1.70 or later
+- Rust 1.87.0 or later
 - Cargo
 
 ### Installation & Running
