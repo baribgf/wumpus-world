@@ -3,6 +3,8 @@ use std::{
     fmt::{Display, Write},
 };
 
+use rand::seq::IteratorRandom;
+
 use crate::{
     agent::{Action, Direction, Observation},
     grid::{Grid, Pos},
@@ -36,39 +38,108 @@ pub struct Environment {
     curr_obs: Observation,
 }
 
+pub enum GridType {
+    Classic,
+    Random,
+}
+
 impl Environment {
-    pub fn new() -> Self {
-        const START_POS_ROW: usize = 3;
-        const START_POS_COL: usize = 0;
+    pub fn new(grid_type: GridType) -> Self {
+        let mut grid: Grid;
+        let init_pos: Pos;
 
-        let mut grid = Grid::new(4, 4);
+        match grid_type {
+            GridType::Classic => {
+                init_pos = Pos::new(3, 0);
 
-        grid[0][0].set_kind(RoomKind::Void);
-        grid[0][1].set_kind(RoomKind::Void);
-        grid[0][2].set_kind(RoomKind::Void);
-        grid[0][3].set_kind(RoomKind::Pit);
+                grid = Grid::new(4, 4);
 
-        grid[1][0].set_kind(RoomKind::Wumpus);
-        grid[1][1].set_kind(RoomKind::Gold);
-        grid[1][2].set_kind(RoomKind::Pit);
-        grid[1][3].set_kind(RoomKind::Void);
+                grid[0][0].set_kind(RoomKind::Void);
+                grid[0][1].set_kind(RoomKind::Void);
+                grid[0][2].set_kind(RoomKind::Void);
+                grid[0][3].set_kind(RoomKind::Pit);
 
-        grid[2][0].set_kind(RoomKind::Void);
-        grid[2][1].set_kind(RoomKind::Void);
-        grid[2][2].set_kind(RoomKind::Void);
-        grid[2][3].set_kind(RoomKind::Void);
+                grid[1][0].set_kind(RoomKind::Wumpus);
+                grid[1][1].set_kind(RoomKind::Gold);
+                grid[1][2].set_kind(RoomKind::Pit);
+                grid[1][3].set_kind(RoomKind::Void);
 
-        grid[3][0].set_kind(RoomKind::Void);
-        grid[3][1].set_kind(RoomKind::Void);
-        grid[3][2].set_kind(RoomKind::Pit);
-        grid[3][3].set_kind(RoomKind::Void);
+                grid[2][0].set_kind(RoomKind::Void);
+                grid[2][1].set_kind(RoomKind::Void);
+                grid[2][2].set_kind(RoomKind::Void);
+                grid[2][3].set_kind(RoomKind::Void);
+
+                grid[3][0].set_kind(RoomKind::Void);
+                grid[3][1].set_kind(RoomKind::Void);
+                grid[3][2].set_kind(RoomKind::Pit);
+                grid[3][3].set_kind(RoomKind::Void);
+            }
+            GridType::Random => {
+                const MAX_NROWS: usize = 6;
+                const MAX_NCOLS: usize = 6;
+                const PIT_PROB: f64 = 0.2;
+
+                let nrows: usize = rand::random_range(4..=MAX_NROWS);
+                let ncols: usize = rand::random_range(4..=MAX_NCOLS);
+
+                grid = Grid::new(nrows, ncols);
+
+                /* Initialize all rooms with type `RoomKind::Void` */
+                // cp_set: Candidate Positions Set
+                let mut cp_set: HashSet<Pos> = HashSet::new();
+                for i in 0..nrows {
+                    for j in 0..ncols {
+                        cp_set.insert(Pos::new(i, j));
+                        grid[i][j].set_kind(RoomKind::Void);
+                    }
+                }
+
+                let mut rng = rand::rng();
+                /* Choose a random start position */
+                init_pos = cp_set.iter().choose(&mut rng).unwrap().clone();
+                cp_set.remove(&init_pos);
+
+                cp_set.remove(&Pos::new(
+                    (init_pos.row as isize - 1).max(0) as usize,
+                    init_pos.col,
+                ));
+                cp_set.remove(&Pos::new(init_pos.row + 1, init_pos.col));
+                cp_set.remove(&Pos::new(
+                    init_pos.row,
+                    (init_pos.col as isize - 1).max(0) as usize,
+                ));
+                cp_set.remove(&Pos::new(init_pos.row, init_pos.col + 1));
+
+                /* Choose random positions that are not the start position
+                to put `RoomKind::Pit` rooms with probability `PIT_PROB` */
+                let mut pits: HashSet<Pos> = HashSet::new();
+                for pos in cp_set.iter() {
+                    if rand::random_bool(PIT_PROB) {
+                        grid.mut_room_at(&pos).set_kind(RoomKind::Pit);
+                        pits.insert(pos.clone());
+                    }
+                }
+                cp_set.retain(|pos| !pits.contains(pos));
+
+                /* Choose a random position that is not the start
+                position and doesn't containt a pit to put the Wumpus */
+                let wumpus_pos = cp_set.iter().choose(&mut rng).unwrap();
+                grid.mut_room_at(&wumpus_pos).set_kind(RoomKind::Wumpus);
+
+                /* Choose a random position that is not the start
+                position and contains neither a pit or wumpus
+                to put the Gold! */
+                let gold_pos = cp_set.iter().choose(&mut rng).unwrap();
+                grid.mut_room_at(&gold_pos).set_kind(RoomKind::Gold);
+            }
+        }
 
         let mut env = Environment {
             grid,
             score: 0,
-            init_pos: Pos::new(START_POS_ROW, START_POS_COL),
-            agent_pos: Pos::new(0, 0),
-            curr_obs: Observation::new(Pos::new(0, 0)),
+            init_pos: init_pos.clone(),
+            agent_pos: init_pos.clone(),
+            curr_obs: Observation::new(init_pos.clone()),
         };
 
         Self::initialize(&mut env);

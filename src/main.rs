@@ -10,7 +10,7 @@ mod tui;
 use crate::{
     agent::{Action, Agent, Direction},
     agents::KnowledgeBasedAgent,
-    env::{ActionResult, Environment, Sense},
+    env::{ActionResult, Environment, GridType, Sense},
 };
 
 #[derive(PartialEq)]
@@ -48,10 +48,33 @@ fn main() {
 }
 
 fn play(mode: GameMode) {
+    let grid_type: GridType;
+    loop {
+        println!("Choose grid variant: ");
+        println!();
+        println!("[c] Classic");
+        println!("[r] Random");
+        println!();
+        println!("[b] Back");
+        tui::print_prompt();
+        match tui::read_command().as_str() {
+            "c" => {
+                grid_type = GridType::Classic;
+                break;
+            }
+            "r" => {
+                grid_type = GridType::Random;
+                break;
+            }
+            "b" => return,
+            _ => {}
+        }
+    }
+
     println!();
     println!("Initializing game..");
 
-    let mut env = Environment::new();
+    let mut env = Environment::new(grid_type);
 
     match mode {
         GameMode::Player => {
@@ -148,7 +171,7 @@ fn play(mode: GameMode) {
                 env.grid().nrows(),
                 env.grid().ncols(),
             );
-            
+
             loop {
                 let action = agent.act(env.observation());
                 match &action {
