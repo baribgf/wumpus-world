@@ -11,7 +11,11 @@ use crate::{
     room::{Room, RoomKind},
 };
 
+const MOVE_PENALTY: usize = 1;
 const ARROW_PENALTY: usize = 10;
+const PIT_PENALTY: usize = 1000;
+const WUMPUS_PENALTY: usize = 1000;
+const GOLD_REWARD: usize = 1000;
 
 #[derive(Debug, Eq, Hash, PartialEq, Clone)]
 pub enum Sense {
@@ -24,10 +28,16 @@ pub enum Sense {
 }
 
 #[derive(Debug)]
+pub enum Item {
+    Gold,
+}
+
+#[derive(Debug)]
 pub enum ActionResult {
     Ok,
     GameOver,
     Sense(Sense),
+    Grabbed(Item),
 }
 
 pub struct Environment {
@@ -77,10 +87,12 @@ impl Environment {
             GridType::Random => {
                 const MAX_NROWS: usize = 6;
                 const MAX_NCOLS: usize = 6;
+                const MIN_NROWS: usize = 4;
+                const MIN_NCOLS: usize = 4;
                 const PIT_PROB: f64 = 0.2;
 
-                let nrows: usize = rand::random_range(4..=MAX_NROWS);
-                let ncols: usize = rand::random_range(4..=MAX_NCOLS);
+                let nrows: usize = rand::random_range(MIN_NROWS..=MAX_NROWS);
+                let ncols: usize = rand::random_range(MIN_NCOLS..=MAX_NCOLS);
 
                 grid = Grid::new(nrows, ncols);
 
@@ -197,7 +209,11 @@ impl Environment {
     }
 
     pub fn current_room(&self) -> &Room {
-        &self.grid.room_at(&self.agent_pos)
+        self.grid.room_at(&self.agent_pos)
+    }
+
+    pub fn current_room_mut(&mut self) -> &mut Room {
+        self.grid.mut_room_at(&self.agent_pos)
     }
 
     pub fn observation(&self) -> &Observation {
@@ -243,7 +259,7 @@ impl Environment {
                     }
                 }
                 self.lightup_agent_position();
-                self.set_score(self.score() + self.current_room().get_kind().score());
+                self.set_score(self.score() - MOVE_PENALTY as isize);
 
                 // update current observation
                 self.curr_obs.set_position(self.agent_position().clone());
@@ -257,8 +273,14 @@ impl Environment {
                 self.curr_obs.mut_directions().extend(available_dirs);
 
                 match self.current_room().get_kind() {
-                    RoomKind::Pit => ActionResult::GameOver,
-                    RoomKind::Wumpus => ActionResult::GameOver,
+                    RoomKind::Pit => {
+                        self.set_score(self.score() - PIT_PENALTY as isize);
+                        ActionResult::GameOver
+                    }
+                    RoomKind::Wumpus => {
+                        self.set_score(self.score() - WUMPUS_PENALTY as isize);
+                        ActionResult::GameOver
+                    }
                     _ => ActionResult::Ok,
                 }
             }
@@ -293,6 +315,17 @@ impl Environment {
                     ActionResult::Sense(sense)
                 }
             },
+            Action::Grab => {
+                if *self.current_room().get_kind() == RoomKind::Gold {
+                    self.set_score(self.score() + GOLD_REWARD as isize);
+                    self.current_room_mut().set_kind(RoomKind::Void);
+                    self.current_room_mut().mut_senses().remove(&Sense::Glitter);
+                    self.curr_obs.mut_senses().remove(&Sense::Glitter);
+                    ActionResult::Grabbed(Item::Gold)
+                } else {
+                    ActionResult::Ok
+                }
+            }
         }
     }
 }

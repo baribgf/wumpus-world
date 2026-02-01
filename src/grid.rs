@@ -73,7 +73,7 @@ impl Grid {
         }
     }
 
-    fn update_senses(&mut self) {
+    pub fn update_senses(&mut self) {
         for i in 0..self.nrows {
             for j in 0..self.ncols {
                 match self.cells[i][j].get_kind() {

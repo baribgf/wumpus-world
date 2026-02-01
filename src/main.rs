@@ -120,6 +120,7 @@ fn play(mode: GameMode) {
                                 Sense::Bump(_) => tui::invalid_direction(),
                                 _ => fatal(),
                             },
+                            _ => fatal(),
                         };
                     }
                     shoot
@@ -157,6 +158,14 @@ fn play(mode: GameMode) {
                             _ => fatal(),
                         };
                     }
+                    "gr" => match env.step(&Action::Grab) {
+                        ActionResult::Grabbed(item) => {
+                            tui::display_env(&env);
+                            println!("You grabbed {:?}", item);
+                        }
+                        ActionResult::Ok => println!("Nothing can be grabbed here!"),
+                        _ => fatal(),
+                    },
                     _ => tui::invalid_input(),
                 }
             }
@@ -217,6 +226,14 @@ fn play(mode: GameMode) {
                             }
                         },
                         _ => {}
+                    },
+                    Action::Grab => match env.step(&action) {
+                        ActionResult::Grabbed(item) => {
+                            tui::display_env(&env);
+                            println!("Agent grabbed {:?}", item);
+                            println!();
+                        }
+                        _ => fatal(),
                     },
                 }
             }

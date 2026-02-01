@@ -27,11 +27,13 @@ impl Direction {
 /// * `Move(Direction)` - Move the agent in the specified direction
 /// * `Shoot(Direction)` - Shoot an arrow in the specified direction
 /// * `Climb` - Climb out of the cave
+/// * `Grab` - Grab something on the current position
 #[derive(PartialEq)]
 pub enum Action {
     Move(Direction),
     Shoot(Direction),
     Climb,
+    Grab,
 }
 
 #[derive(Debug)]

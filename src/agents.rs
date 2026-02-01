@@ -192,6 +192,7 @@ impl KnowledgeBasedAgent {
 
         if obs.senses().contains(&Sense::Glitter) {
             self.treasures += 1;
+            return Action::Grab;
         }
 
         if self.treasures == self.total_treasures {

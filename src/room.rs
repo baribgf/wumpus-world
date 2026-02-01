@@ -5,27 +5,12 @@ use std::{
 
 use crate::env::Sense;
 
+#[derive(PartialEq)]
 pub enum RoomKind {
     Void,
     Pit,
     Wumpus,
     Gold,
-}
-
-const MOVE_PENALTY: usize = 1;
-const PIT_PENALTY: usize = 1000;
-const WUMPUS_PENALTY: usize = 1000;
-const GOLD_REWARD: usize = 1000;
-
-impl RoomKind {
-    pub fn score(&self) -> isize {
-        match self {
-            RoomKind::Void => -(MOVE_PENALTY as isize),
-            RoomKind::Pit => -(PIT_PENALTY as isize),
-            RoomKind::Wumpus => -(WUMPUS_PENALTY as isize),
-            RoomKind::Gold => GOLD_REWARD as isize,
-        }
-    }
 }
 
 impl Display for RoomKind {
@@ -72,6 +57,10 @@ impl Room {
 
     pub fn senses(&self) -> &HashSet<Sense> {
         &self.senses
+    }
+
+    pub fn mut_senses(&mut self) -> &mut HashSet<Sense> {
+        &mut self.senses
     }
 
     pub fn add_sense(&mut self, sense: Sense) {

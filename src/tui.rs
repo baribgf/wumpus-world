@@ -56,6 +56,7 @@ pub fn play_help() {
     println!("[mv] Move [n,s,e,w]");
     println!("[sh] Shoot arrow [n,s,e,w]");
     println!("[cl] Climb out");
+    println!("[gr] Grab");
     println!();
     println!("[?] Help");
     println!("[b] Back to Main Menu");
@@ -120,6 +121,7 @@ pub fn general_help() {
     println!("  [mv n|s|e|w] - Move in a direction");
     println!("  [sh n|s|e|w] - Shoot an arrow in a direction");
     println!("  [cl] Climb out - Exit the cave");
+    println!("  [gr] Grab something");
     println!();
     println!("Wumpus (an ugly monster), Pit (a deadly fall)");
     println!("?=");
